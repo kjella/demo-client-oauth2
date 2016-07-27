@@ -1,0 +1,18 @@
+# Base configuration
+name: Default OAuth Client
+base_host: http://localhost:8080
+base_url: /api/v1
+register_as_user_url: unres/user/new
+confirm_as_developer_url: res/user/developer
+
+register_client_endpoint_url: unres/oauth/new
+
+# Data providers
+user_provider_url: [provider_url|slack_bot]
+developer_provider_url: [provider_url|slack_bot]
+oauth_client_provider_url: [provider_url|slack_bot]
+
+# Scenario 1
+# - Developer registers an App. The app requests access to email and name from users who want to use it.
+# - A user wants to use the app and authorizes it to access it's details.
+# - The user
