@@ -9,6 +9,14 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import cucumber.runtime.ClassFinder;
+import cucumber.runtime.Glue;
+import cucumber.runtime.Runtime;
+import cucumber.runtime.RuntimeOptions;
+import cucumber.runtime.io.MultiLoader;
+import cucumber.runtime.io.ResourceLoader;
+import cucumber.runtime.io.ResourceLoaderClassFinder;
+import org.arvesen.oauth.circlekid.cucumber.features.CircleKRuntimeGlue;
 import org.arvesen.oauth.circlekid.dto.OAuthClientDTO;
 import org.arvesen.oauth.circlekid.dto.OAuthClientDTOImpl;
 import org.arvesen.oauth.circlekid.dto.OAuthClientSecrets;
@@ -21,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class App {
@@ -36,7 +46,7 @@ public class App {
     private String sessionCookie;
     private static final String developerEmail = "test24@gmail.com";
 
-    public static void main(String[] vars) throws Exception {
+    public static void main(String[] vars) throws Throwable {
 
         System.out.println("Reading yaml configuration...");
         //readYamlConfiguration("instructions.yml");
@@ -51,7 +61,12 @@ public class App {
 
     }
 
-    private void start() throws Exception {
+    private void start() throws Throwable {
+
+        // Read in the cucumber file to get the behaviour we want
+        startCucumber();
+        //readInCucumberFeatures();
+
         final Optional<UserDTO> developer = Optional.of(registerDeveloper(developerEmail));
 
         if ( !developer.isPresent() ) {
@@ -64,6 +79,31 @@ public class App {
 
         final Optional<UserDTO> regularUser = Optional.of(registerUser("user5@gmail.com"));
 
+    }
+
+    private void startCucumber() throws Throwable {
+        List<String> arguments = new ArrayList<>();
+        arguments.add("--plugin");
+        arguments.add("json");
+        arguments.add("user_login.feature");
+
+        RuntimeOptions runtimeOptions = new RuntimeOptions(arguments);
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        ResourceLoader resourceLoader = new MultiLoader(classLoader);
+        ClassFinder classFinder = new ResourceLoaderClassFinder(resourceLoader, classLoader);
+
+        /*public Runtime(resourceLoader, classLoader, Collection<? extends Backend > backends,
+                RuntimeOptions runtimeOptions, CircleKRuntimeGlue optionalGlue) {
+
+                Runtime(resourceLoader, classLoader, null,
+                RuntimeOptions runtimeOptions, CircleKRuntimeGlue optionalGlue)
+
+                */
+
+        Glue glue = new CircleKRuntimeGlue();
+        // new Runtime(resourceLoader, classFinder, classLoader, runtimeOptions);
+        Runtime runtime = new Runtime(resourceLoader, classFinder, classLoader, runtimeOptions);
+        runtime.run();
     }
 
     private OAuthClientDTO developerRegistersOAuthClient(final UserDTO developerUser) throws UnirestException {
@@ -201,4 +241,5 @@ public class App {
             }
         });
     }
+
 }
